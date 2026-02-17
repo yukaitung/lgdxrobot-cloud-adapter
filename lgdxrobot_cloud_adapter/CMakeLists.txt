@@ -24,7 +24,10 @@ target_link_libraries(${PROTO_NAME}
   gRPC::grpc
   gRPC::grpc++
 )
-target_include_directories(${PROTO_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${PROTO_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
 
 get_target_property(grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION)
 protobuf_generate(TARGET ${PROTO_NAME} LANGUAGE cpp)
