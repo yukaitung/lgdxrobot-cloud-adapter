@@ -197,10 +197,10 @@ void CloudAdapter::Initalise()
       [this](const std::shared_ptr<lgdxrobot_cloud_msgs::srv::McuSn::Request> request,
         std::shared_ptr<lgdxrobot_cloud_msgs::srv::McuSn::Response> response)
       {
-        if (hasMcuSn == false && !request->muc_sn.empty())
+        if (hasMcuSn == false && !request->mcu_sn.empty())
         {
           hasMcuSn = true;
-          Greet(request->muc_sn);
+          Greet(request->mcu_sn);
           response->success = true;
         }
         else
