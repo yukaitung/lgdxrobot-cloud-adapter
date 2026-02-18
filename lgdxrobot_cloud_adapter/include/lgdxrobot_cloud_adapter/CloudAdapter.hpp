@@ -18,6 +18,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
+#include "std_msgs/msg/bool.hpp"
 
 #include "RobotStatus.hpp"
 #include "Map.hpp"
@@ -52,12 +53,13 @@ class CloudAdapter : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr cloudRetryTimer;
     rclcpp::TimerBase::SharedPtr autoTaskPublisherTimer;
     rclcpp::TimerBase::SharedPtr cloudExchangeTimer;
-    rclcpp::TimerBase::SharedPtr robotDataPublisherTimer;
+    rclcpp::TimerBase::SharedPtr softwareEmergencyStopPublisherTimer;
     rclcpp::Publisher<lgdxrobot_cloud_msgs::msg::AutoTask>::SharedPtr autoTaskPublisher;
-    rclcpp::Publisher<lgdxrobot_cloud_msgs::msg::RobotData>::SharedPtr robotDataPublisher;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr softwareEmergencyStopPublisher;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::McuSn>::SharedPtr mcuSerialNumberService;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::AutoTaskNext>::SharedPtr autoTaskNextService;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::AutoTaskAbort>::SharedPtr autoTaskAbortService;
+    rclcpp::Subscription<lgdxrobot_cloud_msgs::msg::RobotData>::SharedPtr robotDataSubscription;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr mapSubscription;
     std::shared_ptr<tf2_ros::TransformListener> tfListener{nullptr};
     std::unique_ptr<tf2_ros::Buffer> tfBuffer;

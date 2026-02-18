@@ -47,6 +47,7 @@ find_package(nav2_msgs REQUIRED)
 find_package(nav2_util REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(lgdxrobot_cloud_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 include_directories(include)
 
@@ -73,6 +74,7 @@ ament_target_dependencies(lgdxrobot_cloud_component
   nav2_util
   geometry_msgs
   lgdxrobot_cloud_msgs
+  std_msgs
 )
 
 rclcpp_components_register_node(lgdxrobot_cloud_component

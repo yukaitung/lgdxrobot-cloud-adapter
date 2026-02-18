@@ -88,7 +88,40 @@ void CloudAdapter::Initalise()
       std::bind(&CloudAdapter::CloudExchange, this));
     cloudExchangeTimer->cancel();
 
+    // Subscribers
+    robotDataSubscription = this->create_subscription<lgdxrobot_cloud_msgs::msg::RobotData>("cloud/robot_data", 
+      rclcpp::SensorDataQoS().reliable(),
+      [this](const std::shared_ptr<lgdxrobot_cloud_msgs::msg::RobotData> msg)
+      {
+        if (msg->hardware_emergency_stop_enabled)
+        {
+          criticalStatus.set_hardwareemergencystop(true);
+          RobotStatus::CriticalManager::Enter(robotStatus);
+        }
+        else
+        {
+          criticalStatus.set_hardwareemergencystop(false);
+          TryExitCriticalStatus();
+        }
+        if (msg->batteries_voltage.size() > 0)
+        {
+          batteries[0] = msg->batteries_voltage[0];
+        }
+        if (msg->batteries_voltage.size() > 1)
+        {
+          batteries[1] = msg->batteries_voltage[1];
+        }
+      });
     // Topics
+    softwareEmergencyStopPublisher = this->create_publisher<std_msgs::msg::Bool>("cloud/software_emergency_stop", 
+      rclcpp::SensorDataQoS().reliable());
+    softwareEmergencyStopPublisherTimer = this->create_wall_timer(std::chrono::milliseconds(100),
+      [this]()
+      {
+        auto message = std_msgs::msg::Bool();
+        message.data = criticalStatus.softwareemergencystop();
+        softwareEmergencyStopPublisher->publish(message);
+      });
     autoTaskPublisher = this->create_publisher<lgdxrobot_cloud_msgs::msg::AutoTask>("cloud/auto_task", 
       rclcpp::SensorDataQoS().reliable());
     autoTaskPublisherTimer = this->create_wall_timer(std::chrono::milliseconds(100), 
@@ -714,9 +747,7 @@ void CloudAdapter::OnNavigationAborted()
 void CloudAdapter::TryExitCriticalStatus()
 {
   // Ensure no unreslovable status
-  if (criticalStatus.hardwareemergencystop() == true ||
-        criticalStatus.batterylow_size() > 0 ||
-        criticalStatus.motordamaged_size() > 0)
+  if (criticalStatus.hardwareemergencystop() == true)
   {
     RCLCPP_ERROR(this->get_logger(), "Unresolvable critical status, will not exit.");
     return;
