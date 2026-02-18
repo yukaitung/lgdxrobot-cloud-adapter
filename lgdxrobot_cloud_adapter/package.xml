@@ -13,14 +13,15 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>boost</buildtool_depend>
+  <buildtool_depend>geometry_msgs</buildtool_depend>
   <buildtool_depend>libgrpc</buildtool_depend>
+  <buildtool_depend>nav_msgs</buildtool_depend>
+  <buildtool_depend>nav2_msgs</buildtool_depend>
+  <buildtool_depend>nav2_util</buildtool_depend>
   <buildtool_depend>protobuf-compiler-grpc</buildtool_depend>
   <buildtool_depend>protobuf-dev</buildtool_depend>
   <buildtool_depend>rclcpp_components</buildtool_depend>
   <buildtool_depend>rclcpp</buildtool_depend>
-  <buildtool_depend>nav_msgs</buildtool_depend>
-  <buildtool_depend>nav2_msgs</buildtool_depend>
-  <buildtool_depend>geometry_msgs</buildtool_depend>
 
   <exec_depend>boost</exec_depend>
   <exec_depend>libgrpc</exec_depend>
@@ -28,6 +29,7 @@
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>nav2_msgs</exec_depend>
+  <exec_depend>nav2_util</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   
   <export>
