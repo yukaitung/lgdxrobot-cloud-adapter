@@ -19,6 +19,15 @@ RUN apt-get update \
     && rosdep install --from-paths /src --ignore-src -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Complie the packages
+WORKDIR /src/lgdxrobot_cloud_msgs
+RUN bloom-generate rosdebian
+RUN fakeroot debian/rules binary
+
+## Install the agent package for webots
+WORKDIR /src
+RUN dpkg -i *.deb
+
 WORKDIR /src/lgdxrobot_cloud_adapter
 RUN bloom-generate rosdebian
 RUN fakeroot debian/rules binary
