@@ -30,7 +30,7 @@ void CloudAdapter::Initalise()
   cloudSlamEnableParam.description = "Require MCU Serial Number before connecting to the cloud.";
   this->declare_parameter("need_mcu_sn", false, cloudNeedMcuSn);
   auto cloudAddressParam = rcl_interfaces::msg::ParameterDescriptor{};
-  cloudAddressParam.description = "Address of LGDXRobot2 Cloud.";
+  cloudAddressParam.description = "Address of LGDXRobot Cloud.";
   this->declare_parameter("address", "", cloudAddressParam);
   auto cloudRootCertParam = rcl_interfaces::msg::ParameterDescriptor{};
   cloudRootCertParam.description = "Path to server root certificate.";

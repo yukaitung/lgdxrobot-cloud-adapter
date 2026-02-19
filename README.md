@@ -29,7 +29,7 @@ sudo dpkg -i lgdxrobotics-apt-source.deb
 sudo apt update
 ```
 
-4. Install tLGDXRobot Cloud Adapter.
+4. Install LGDXRobot Cloud Adapter.
 
 ```bash
 sudo apt install ros-${ROS_DISTRO}-lgdxrobot-cloud-*
@@ -61,3 +61,40 @@ source install/setup.bash
 
 colcon build --symlink-install
 ```
+
+## Robot Integration
+
+The LGDXRobot Cloud Adapter is designed for any robot running ROS 2 and Nav2.  
+The robot’s ROS node must map the topics listed below.
+
+### Published Topics
+
+| Topic Name | Type | Description |
+| --- | --- | --- |
+| /cloud/robot_data | [lgdxrobot_cloud_msgs/RobotData](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/blob/main/lgdxrobot_cloud_msgs/msg/RobotData.msg) | Robot data sent to the cloud |
+
+`RobotData` includes the following fields:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| hardware_emergency_stop_enabled | bool | Indicates whether the robot is in a hardware emergency stop state. |
+| batteries_voltage | float32[2] | Battery voltages: [0] for the first battery, [1] for the second battery. |
+
+### Subscribed Topics
+
+| Topic Name | Type | Description |
+| --- | --- | --- |
+| /cloud/software_emergency_stop | std_msgs/Bool | Enables or disables the software emergency stop to halt robot movement. |
+
+### Parameters
+
+When starting the LGDXRobot Cloud Adapter, the following parameters must be configured:
+
+| Parameter Name | Type | Description |
+| --- | --- | --- |
+| slam_enable | bool | Enables or disables SLAM mode. |
+| address | string | Address of the LGDXRobot Cloud. |
+| root_cert | string | Path to the server root certificate. |
+| client_key | string | Path to the client's private key. |
+| client_cert | string | Path to the client's certificate chain. |
+
