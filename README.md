@@ -1,6 +1,6 @@
 # LGDXRobot Cloud Adapter
 
-[![pipeline status](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/badges/main/pipeline.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/commits/main)  [![Latest Release](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/badges/release.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/releases) 
+[![pipeline status](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/badges/main/pipeline.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/commits/main)  [![Latest Release](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/badges/release.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot-cloud-adapter/-/releases) [![Release Strategy](https://img.shields.io/badge/Release_Strategy-821B1D)](https://docs.lgdxrobot.bristolgram.uk/release-strategy/)
 
 ## Overview
 
