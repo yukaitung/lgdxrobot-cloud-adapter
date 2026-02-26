@@ -3,7 +3,7 @@ variables:
   GIT_SUBMODULE_FORCE_HTTPS: "true"
 
 stages:
-  - ppreparer
+  - prepare
   - build
   - release
   - auto_merge
