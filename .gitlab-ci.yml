@@ -91,8 +91,10 @@ upload:
     - if: $CI_COMMIT_BRANCH !~ /\// && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH # Only in distro branches
   needs:
     - job: build-amd64
+      optional: true
       artifacts: true
     - job: build-arm64
+      optional: true
       artifacts: true
   before_script:
     - apk add curl
