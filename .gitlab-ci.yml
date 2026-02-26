@@ -174,3 +174,4 @@ auto_merge:
            "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/issues?title=Cannot%20cherry-pick%20${CI_COMMIT_SHA}%20into%20${DISTRO}%20(MR%20${MR_IID})&labels=cicd&description=Based%20on%20${MR_URL}"
         fi
       done
+
