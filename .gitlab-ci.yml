@@ -88,13 +88,11 @@ upload:
   rules:
     - if: $CI_COMMIT_TAG
       when: never 
-    - if: $CI_COMMIT_BRANCH !~ /\// && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH # Only in distro branches
+    - if: $CI_COMMIT_BRANCH == "jazzy" || $CI_COMMIT_BRANCH == "humble" # Only in jazzy and humble branches
   needs:
     - job: build-amd64
-      optional: true
       artifacts: true
     - job: build-arm64
-      optional: true
       artifacts: true
   before_script:
     - apk add curl
