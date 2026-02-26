@@ -7,6 +7,7 @@ stages:
   - prepare
   - build
   - release
+  - auto_merge
 
 #
 # Parepare variables
@@ -33,9 +34,6 @@ prepare:
 
 build-amd64:
   stage: build
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never 
   image: docker:24.0.5-git
   needs:
     - job: prepare
@@ -60,9 +58,6 @@ build-amd64:
 
 build-arm64:
   stage: build
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never 
   image: docker:24.0.5-git
   needs:
     - job: prepare
@@ -133,3 +128,45 @@ release:
     tag_name: '$APP_VERSION'
     description: '$APP_VERSION'
     ref: '$CI_COMMIT_SHA'
+
+auto_merge:
+  image: alpine:latest
+  stage: auto_merge
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+  before_script:
+    - apk add curl
+    - apk add jq
+  script:
+    - |
+      MR_URL=$(curl --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+       "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/commits/${CI_COMMIT_SHA}/merge_requests" | jq -r '.[0].web_url')
+      MR_IID=$(curl --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+       "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/commits/${CI_COMMIT_SHA}/merge_requests" | jq -r '.[0].iid')
+    - |
+      for DISTRO in humble jazzy; do
+        echo "Creating merge request for ${DISTRO}"
+        BRANCH_NAME=cherry-pick-${DISTRO}-${CI_COMMIT_SHA}
+        curl --request POST \
+           --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/branches?branch=${BRANCH_NAME}&ref=${DISTRO}"
+        STATUS=$(curl --request POST \
+           --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+           --form "branch=${BRANCH_NAME}" \
+           --silent --output /dev/null --write-out "%{http_code}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/commits/${CI_COMMIT_SHA}/cherry_pick")
+        if [ "$STATUS" -eq 201 ]; then
+          echo "Cherry-pick succeeded, creating merge request"
+          curl --request POST \
+           --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${BRANCH_NAME}&target_branch=${DISTRO}&title=Merge%20${CI_COMMIT_SHA}%20into%20${DISTRO}%20(MR%20${MR_IID})&description=Based%20on%20${MR_URL}" 
+        else
+          echo "Cherry-pick failed, deleting branch"
+          curl --request DELETE \
+           --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/branches/${BRANCH_NAME}"
+          curl --request POST \
+           --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/issues?title=Cannot%20cherry-pick%20${CI_COMMIT_SHA}%20into%20${DISTRO}%20(MR%20${MR_IID})&labels=cicd&description=Based%20on%20${MR_URL}"
+        fi
+      done
