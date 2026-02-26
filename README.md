@@ -100,3 +100,5 @@ The LGDXRobot Cloud Adapter requires the transform from the `map` frame to the r
 | root_cert | string | Path to the server root certificate. |
 | client_key | string | Path to the client's private key. |
 | client_cert | string | Path to the client's certificate chain. |
+
+
