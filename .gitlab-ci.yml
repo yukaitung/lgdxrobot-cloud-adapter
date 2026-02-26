@@ -2,27 +2,10 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_FORCE_HTTPS: "true"
 
-
 stages:
-  - prepare
   - build
   - release
   - auto_merge
-
-#
-# Parepare variables
-#
-
-prepare:
-  stage: prepare
-  image: alpine:latest
-  script:
-    - apk add libxml2-utils
-    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdxrobot_cloud_adapter/package.xml)" >> variables.env
-  artifacts:
-    reports:
-      dotenv: variables.env
-    expire_in: 1 day
 
 #
 # Build LGDXRobot Cloud Adapter
@@ -31,9 +14,10 @@ prepare:
 build-amd64:
   stage: build
   image: docker:24.0.5-git
-  needs:
-    - job: prepare
-      artifacts: true
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never 
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
   tags:
     - saas-linux-small-amd64
   services:
@@ -43,8 +27,7 @@ build-amd64:
   before_script:
     - apk add zip
   script:
-    - git submodule update --init --recursive
-    - docker build --build-arg APP_VERSION=$APP_VERSION -f Dockerfile -o . .
+    - docker build -f Dockerfile -o . .
     - cd debs
     - zip -r lgdxrobot-cloud-adapter-$ARCH.zip *
   artifacts:
@@ -55,9 +38,10 @@ build-amd64:
 build-arm64:
   stage: build
   image: docker:24.0.5-git
-  needs:
-    - job: prepare
-      artifacts: true
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never 
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
   tags:
     - saas-linux-small-arm64
   variables:
@@ -69,8 +53,7 @@ build-arm64:
   before_script:
     - apk add zip
   script:
-    - git submodule update --init --recursive
-    - docker build --build-arg APP_VERSION=$APP_VERSION -f Dockerfile -o . .
+    - docker build -f Dockerfile -o . .
     - cd debs
     - zip -r lgdxrobot-cloud-adapter-$ARCH.zip *
   artifacts:
@@ -114,15 +97,11 @@ release:
     - if: $CI_COMMIT_TAG
       when: never 
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH # Only in main branch
-  needs:
-    - job: prepare
-      artifacts: true
-    - job: build-amd64
-      artifacts: false
-    - job: build-arm64
-      artifacts: false
-  script:
+  before_script:
     - apk add glab
+    - apk add libxml2-utils
+  script:
+    - export APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdxrobot_cloud_adapter/package.xml)
   release:
     name : '$APP_VERSION'
     tag_name: '$APP_VERSION'
@@ -133,6 +112,8 @@ auto_merge:
   image: alpine:latest
   stage: auto_merge
   rules:
+    - if: $CI_COMMIT_TAG
+      when: never 
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" # Only in main branch
   before_script:
     - apk add curl

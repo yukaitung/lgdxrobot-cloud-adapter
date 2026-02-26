@@ -1,8 +1,6 @@
 # Please note that this dockerfile is for building the .deb files only
 
-FROM ros:jazzy AS builder
-
-ARG APP_VERSION=2.1.0
+FROM ros:humble AS builder
 
 WORKDIR /src
 COPY . .
