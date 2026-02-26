@@ -2,8 +2,6 @@
 
 FROM ros:jazzy AS builder
 
-ARG APP_VERSION=2.1.0
-
 WORKDIR /src
 COPY . .
 
