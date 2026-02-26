@@ -3,9 +3,29 @@ variables:
   GIT_SUBMODULE_FORCE_HTTPS: "true"
 
 stages:
+  - ppreparer
   - build
   - release
   - auto_merge
+
+#
+# Parepare variables
+#
+
+prepare:
+  stage: prepare
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never 
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH # Only in main branch
+  image: alpine:latest
+  script:
+    - apk add libxml2-utils
+    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdxrobot_cloud_adapter/package.xml)" >> variables.env
+  artifacts:
+    reports:
+      dotenv: variables.env
+    expire_in: 1 day
 
 #
 # Build LGDXRobot Cloud Adapter
@@ -97,11 +117,11 @@ release:
     - if: $CI_COMMIT_TAG
       when: never 
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH # Only in main branch
-  before_script:
-    - apk add glab
-    - apk add libxml2-utils
+  needs:
+    - job: prepare
+      artifacts: true
   script:
-    - export APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdxrobot_cloud_adapter/package.xml)
+    - apk add glab
   release:
     name : '$APP_VERSION'
     tag_name: '$APP_VERSION'
