@@ -1,6 +1,6 @@
 # Please note that this dockerfile is for building the .deb files only
 
-FROM ros:jazzy AS builder
+FROM ros:humble AS builder
 
 ARG APP_VERSION=2.1.0
 
@@ -8,7 +8,7 @@ WORKDIR /src
 COPY . .
 
 # Fix ARM64 build network error
-RUN sed -i 's|http://ports.ubuntu.com/ubuntu-ports|https://mirrors.ocf.berkeley.edu/ubuntu-ports/|g' /etc/apt/sources.list.d/ubuntu.sources
+RUN sed -i 's|http://ports.ubuntu.com/ubuntu-ports|https://mirrors.ocf.berkeley.edu/ubuntu-ports/|g' /etc/apt/sources.list
 RUN rosdep update
 RUN apt-get update \
     && apt-get install -y \
