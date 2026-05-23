@@ -24,8 +24,8 @@ The LGDXRobot Cloud Adapter is a ROS 2 node that integrates any robot with the L
 3. The packages are hosted in a self-hosted repository, install this package to add the repository and the public key.
 
 ```bash
-wget -q http://packages.lgdxrobot.uk/lgdxrobotics-apt-source.deb
-sudo dpkg -i lgdxrobotics-apt-source.deb
+wget -q http://packages.lgdxrobot.uk/lgdxrobot-apt-source.deb
+sudo dpkg -i lgdxrobot-apt-source.deb
 sudo apt update
 ```
 
