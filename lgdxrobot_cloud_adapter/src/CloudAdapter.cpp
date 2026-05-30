@@ -76,6 +76,7 @@ void CloudAdapter::Initalise()
   }
 
   // ROS
+  nav2DelayClient = this->create_client<std_srvs::srv::Empty>("cloud/nav2_delay");
   tfBuffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   tfListener = std::make_shared<tf2_ros::TransformListener>(*tfBuffer);
   if (isSlam)
@@ -222,7 +223,6 @@ void CloudAdapter::Initalise()
   }
 }
 
-
 std::string CloudAdapter::GreetReadCertificate(const char *filename)
 {
   std::ifstream file(filename, std::ios::in);
@@ -321,10 +321,15 @@ void CloudAdapter::Greet(std::string mcuSN)
       }
       else
       {
+        GreetWriteRoute(response->mapinfo().route());
         RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
         robotStatus.ConnnectedCloud();
         exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
       }
+      // Start Nav2
+      while (!nav2DelayClient->wait_for_service()) {}
+      nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
+
       // Start the timer to exchange data
       cloudExchangeTimer->reset();
     }
@@ -337,6 +342,18 @@ void CloudAdapter::Greet(std::string mcuSN)
     delete request;
     delete response;
   });
+}
+
+void CloudAdapter::GreetWriteRoute(const std::string& route)
+{
+  std::ofstream file("route.geojson", std::ios::out | std::ios::trunc);
+  if (!file.is_open())
+  {
+    RCLCPP_ERROR(this->get_logger(), "Unable to write route.geojson");
+    return;
+  }
+  file << route;
+  file.close();
 }
 
 void CloudAdapter::ExchangeProcessData()
@@ -504,7 +521,6 @@ void CloudAdapter::OnNextExchange()
 
 void CloudAdapter::OnHandleClouldExchange(const RobotClientsResponse *response)
 {
-
   // Handle AutoTask
   if (response->has_task())
   {

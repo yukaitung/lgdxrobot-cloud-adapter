@@ -78,6 +78,10 @@ message RobotClientsSystemInfo {
   string McuSerialNumber = 9;
 }
 
+message RobotClientsMapInfo {
+  string Route = 1;
+}
+
 message RobotClientsChassisInfo {
   int32 RobotTypeId = 1;
   double ChassisLX = 2;
@@ -97,6 +101,7 @@ message RobotClientsGreetResponse {
   RobotClientsResultStatus Status = 1;
   string AccessToken = 2;
   RobotClientsChassisInfo ChassisInfo = 3;
+  RobotClientsMapInfo MapInfo = 4;
 }
 
 /*

@@ -48,8 +48,15 @@ find_package(nav2_util REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(lgdxrobot_cloud_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 include_directories(include)
+
+add_executable(nav2_delay_node src/Nav2Delay.cpp)
+ament_target_dependencies(nav2_delay_node
+  rclcpp
+  std_srvs
+)
 
 add_library(lgdxrobot_cloud_component SHARED
   src/CloudAdapter.cpp
@@ -75,6 +82,7 @@ ament_target_dependencies(lgdxrobot_cloud_component
   geometry_msgs
   lgdxrobot_cloud_msgs
   std_msgs
+  std_srvs
 )
 
 rclcpp_components_register_node(lgdxrobot_cloud_component
@@ -94,5 +102,9 @@ install(TARGETS lgdxrobot_cloud_component
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+install(TARGETS
+  nav2_delay_node
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

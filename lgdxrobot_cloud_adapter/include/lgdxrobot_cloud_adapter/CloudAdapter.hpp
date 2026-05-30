@@ -19,6 +19,7 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 #include "std_msgs/msg/bool.hpp"
+#include "std_srvs/srv/empty.hpp"
 
 #include "RobotStatus.hpp"
 #include "Map.hpp"
@@ -63,6 +64,7 @@ class CloudAdapter : public rclcpp::Node
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr mapSubscription;
     std::shared_ptr<tf2_ros::TransformListener> tfListener{nullptr};
     std::unique_ptr<tf2_ros::Buffer> tfBuffer;
+    rclcpp::Client<std_srvs::srv::Empty>::SharedPtr nav2DelayClient;
 
     // Robot Data
     RobotStatus robotStatus;
@@ -106,6 +108,7 @@ class CloudAdapter : public rclcpp::Node
     #endif
     void GreetSetSystemInfo(RobotClientsSystemInfo *info);
     void Greet(std::string mcuSN);
+    void GreetWriteRoute(const std::string& route);
 
     void ExchangeProcessData();
     void CloudExchange();
