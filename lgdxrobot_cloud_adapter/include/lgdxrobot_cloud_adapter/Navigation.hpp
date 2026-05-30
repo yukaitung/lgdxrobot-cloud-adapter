@@ -5,7 +5,7 @@
 
 #include "Signals/NavigationSignals.hpp"
 
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "nav_msgs/msg/goals.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "nav2_msgs/action/navigate_through_poses.hpp"
 #include "proto/RobotClientsService.grpc.pb.h"
@@ -14,6 +14,9 @@
 
 class Navigation
 {
+  using NavigateThroughPosesAction = nav2_msgs::action::NavigateThroughPoses;
+  using GoalHandle = rclcpp_action::ClientGoalHandle<NavigateThroughPosesAction>;
+
   private:
     rclcpp::Logger logger_;
 
@@ -23,20 +26,19 @@ class Navigation
     RobotClientsAutoTaskNavProgress lastNavProgress;
     std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgress;
 
-    rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SharedPtr navThroughPosesActionClient;
+    rclcpp_action::Client<NavigateThroughPosesAction>::SharedPtr navThroughPosesActionClient;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr planSubscription;
 
-    void Response(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::SharedPtr &goalHandle);
-    void Feedback(rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::SharedPtr, 
-      const std::shared_ptr<const nav2_msgs::action::NavigateThroughPoses::Feedback> feedback);
-    void Result(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::WrappedResult &result);
+    void Response(const GoalHandle::SharedPtr &goalHandle);
+    void Feedback(GoalHandle::SharedPtr, const std::shared_ptr<const NavigateThroughPosesAction::Feedback> feedback);
+    void Result(const GoalHandle::WrappedResult &result);
     void PlanCallback(const nav_msgs::msg::Path &msg);
 
   public:
     Navigation(rclcpp::Node::SharedPtr node,
       std::shared_ptr<NavigationSignals> navigationSignalsPtr,
       std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgressPtr);
-    void Start(std::vector<geometry_msgs::msg::PoseStamped> &poses);
+    void Start(nav_msgs::msg::Goals &goals);
     void Abort();
 };
 

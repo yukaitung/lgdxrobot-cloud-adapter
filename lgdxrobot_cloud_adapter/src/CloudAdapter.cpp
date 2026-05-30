@@ -8,7 +8,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 #include "lgdxrobot_cloud_adapter/CloudAdapter.hpp"
 #include "nav2_util/geometry_utils.hpp"
-
+#include "nav_msgs/msg/goals.hpp"
 
 namespace LGDXRobotCloud
 {
@@ -587,16 +587,15 @@ void CloudAdapter::OnHandleSlamExchange(const RobotClientsSlamCommands *respond)
     double y = respond->setgoal().y();
     double rotation = respond->setgoal().rotation();
     RCLCPP_INFO(this->get_logger(), "A new goal is set: %fm, %fm, %frad", x, y, rotation);
-    std::vector<geometry_msgs::msg::PoseStamped> poses;
-    auto pose = geometry_msgs::msg::PoseStamped();
-    pose.header.stamp = rclcpp::Clock().now();
-    pose.header.frame_id = "map";
-    pose.pose.position.z = 0.0;
+    nav_msgs::msg::Goals goals;
+    goals.header.frame_id = "map";
+    geometry_msgs::msg::PoseStamped pose;
     pose.pose.position.x = x;
     pose.pose.position.y = y;
+    pose.pose.position.z = 0.0;
     pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(rotation);
-    poses.push_back(pose);
-    navigation->Start(poses);
+    goals.goals.push_back(pose);
+    navigation->Start(goals);
     exchangeSlamStatus = RobotClientsSlamStatus::SlamRunning;
   }
   if (respond->has_abortgoal() && respond->abortgoal() == true)
@@ -646,20 +645,19 @@ void CloudAdapter::NavigationStart()
 {
   if (navigationProgress < navigationPaths.size())
   {
-    std::vector<geometry_msgs::msg::PoseStamped> poses;
-    auto pose = geometry_msgs::msg::PoseStamped();
-    pose.header.stamp = rclcpp::Clock().now();
-    pose.header.frame_id = "map";
-    pose.pose.position.z = 0.0;
+    nav_msgs::msg::Goals goals;
+    goals.header.frame_id = "map";
     for (int i = 0; i < navigationPaths.at(navigationProgress).waypoints_size(); i++)
     {
+      geometry_msgs::msg::PoseStamped pose;
       const RobotClientsDof waypoint = navigationPaths.at(navigationProgress).waypoints(i);
       pose.pose.position.x = waypoint.x();
       pose.pose.position.y = waypoint.y();
+      pose.pose.position.z = 0.0;
       pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(waypoint.rotation());
-      poses.push_back(pose);
+      goals.goals.push_back(pose);
     }
-    navigation->Start(poses);
+    navigation->Start(goals);
     navigationProgress++;
   }
   else

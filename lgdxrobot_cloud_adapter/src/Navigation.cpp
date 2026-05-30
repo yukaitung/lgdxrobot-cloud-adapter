@@ -1,5 +1,7 @@
 #include "lgdxrobot_cloud_adapter/Navigation.hpp"
 
+using namespace std::chrono_literals;
+
 Navigation::Navigation(rclcpp::Node::SharedPtr node, 
     std::shared_ptr<NavigationSignals> navigationSignalsPtr,
     std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgressPtr
@@ -8,7 +10,7 @@ Navigation::Navigation(rclcpp::Node::SharedPtr node,
   navigationSignals = navigationSignalsPtr;
   navProgress = navProgressPtr;
 
-  navThroughPosesActionClient = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(
+  navThroughPosesActionClient = rclcpp_action::create_client<NavigateThroughPosesAction>(
     node,
     "navigate_through_poses");
 	planSubscription = node->create_subscription<nav_msgs::msg::Path>("plan",
@@ -16,7 +18,7 @@ Navigation::Navigation(rclcpp::Node::SharedPtr node,
     std::bind(&Navigation::PlanCallback, this, std::placeholders::_1));
 }
 
-void Navigation::Response(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::SharedPtr &goalHandle)
+void Navigation::Response(const GoalHandle::SharedPtr &goalHandle)
 {
   if (!goalHandle)
   {
@@ -25,8 +27,8 @@ void Navigation::Response(const rclcpp_action::ClientGoalHandle<nav2_msgs::actio
   }
 }
 
-void Navigation::Feedback(rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::SharedPtr, 
-  const std::shared_ptr<const nav2_msgs::action::NavigateThroughPoses::Feedback> feedback)
+void Navigation::Feedback(GoalHandle::SharedPtr, 
+  const std::shared_ptr<const NavigateThroughPosesAction::Feedback> feedback)
 {
   lastNavProgress = *navProgress;
   navProgress->set_eta(rclcpp::Duration(feedback->estimated_time_remaining).seconds());
@@ -66,7 +68,7 @@ void Navigation::Feedback(rclcpp_action::ClientGoalHandle<nav2_msgs::action::Nav
   }
 }
 
-void Navigation::Result(const rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>::WrappedResult &result)
+void Navigation::Result(const GoalHandle::WrappedResult &result)
 {
   switch (result.code)
   {
@@ -101,20 +103,19 @@ void Navigation::PlanCallback(const nav_msgs::msg::Path &msg)
   }
 }
 
-void Navigation::Start(std::vector<geometry_msgs::msg::PoseStamped> &poses)
+void Navigation::Start(nav_msgs::msg::Goals &goals)
 {
   using namespace std::placeholders;
 
-  if (!navThroughPosesActionClient->wait_for_action_server())
+  while (!navThroughPosesActionClient->wait_for_action_server(5s))
   {
-    RCLCPP_ERROR(logger_, "navThroughPoses action server is not available.");
-    return;
+    RCLCPP_ERROR(logger_, "navThroughPoses action server is not available yet.");
   }
 
-  auto goal = nav2_msgs::action::NavigateThroughPoses::Goal();
-  goal.poses = poses;
+  auto goal = NavigateThroughPosesAction::Goal();
+  goal.poses = goals;
 
-  auto goalOption = rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+  auto goalOption = rclcpp_action::Client<NavigateThroughPosesAction>::SendGoalOptions();
   goalOption.goal_response_callback = std::bind(&Navigation::Response, this, _1);
   goalOption.feedback_callback = std::bind(&Navigation::Feedback, this, _1, _2);
   goalOption.result_callback = std::bind(&Navigation::Result, this, _1);
