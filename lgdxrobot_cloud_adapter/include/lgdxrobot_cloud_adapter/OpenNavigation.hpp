@@ -1,5 +1,5 @@
-#ifndef NAV_THROUGH_POSES_HPP
-#define NAV_THROUGH_POSES_HPP
+#ifndef OPEN_NAVIGATION_HPP
+#define OPEN_NAVIGATION_HPP
 
 #include <vector>
 
@@ -42,4 +42,4 @@ class OpenNavigation
     void Abort();
 };
 
-#endif // NAV_THROUGH_POSES_HPP
+#endif // OPEN_NAVIGATION_HPP

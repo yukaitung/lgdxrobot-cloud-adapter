@@ -52,7 +52,8 @@ void CloudAdapter::Initalise()
   cloudSignals = std::make_shared<CloudSignals>();
   navigationSignals = std::make_shared<NavigationSignals>();
   navProgress = std::make_shared<RobotClientsAutoTaskNavProgress>();
-  openNavigation = std::make_unique<OpenNavigation>(shared_from_this(), navigationSignals, navProgress);
+  openNavigation = std::make_shared<OpenNavigation>(shared_from_this(), navigationSignals, navProgress);
+  routeNavigation = std::make_unique<RouteNavigation>(shared_from_this(), navigationSignals, openNavigation);
   if (isSlam)
   {
     map = std::make_unique<Map>(shared_from_this());
@@ -321,7 +322,13 @@ void CloudAdapter::Greet(std::string mcuSN)
       }
       else
       {
-        GreetWriteRoute(response->mapinfo().route());
+        std::string route = response->mapinfo().route();
+        if (!route.empty())
+        {
+          GreetWriteRoute(route);
+          isRouteNavigation = true;
+        }
+
         RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
         robotStatus.ConnnectedCloud();
         exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
@@ -538,7 +545,14 @@ void CloudAdapter::OnHandleClouldExchange(const RobotClientsResponse *response)
     else if (currentTask.task_progress_id == 4)
     {
       RCLCPP_INFO(this->get_logger(), "AutoTask Id: %d aborted.", task.taskid());
-      openNavigation->Abort();
+      if (isRouteNavigation)
+      {
+        routeNavigation->Abort();
+      }
+      else
+      {
+        openNavigation->Abort();
+      }
       robotStatus.TaskAborted();
     }
     else
@@ -661,19 +675,41 @@ void CloudAdapter::NavigationStart()
 {
   if (navigationProgress < navigationPaths.size())
   {
-    nav_msgs::msg::Goals goals;
-    goals.header.frame_id = "map";
-    for (int i = 0; i < navigationPaths.at(navigationProgress).waypoints_size(); i++)
+    if (isRouteNavigation)
     {
-      geometry_msgs::msg::PoseStamped pose;
-      const RobotClientsDof waypoint = navigationPaths.at(navigationProgress).waypoints(i);
-      pose.pose.position.x = waypoint.x();
-      pose.pose.position.y = waypoint.y();
-      pose.pose.position.z = 0.0;
-      pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(waypoint.rotation());
-      goals.goals.push_back(pose);
+      // Must be 2 waypoints
+      const RobotClientsDof w1 = navigationPaths.at(navigationProgress).waypoints(0);
+      geometry_msgs::msg::PoseStamped waypoint1;
+      waypoint1.header.frame_id = "map";
+      waypoint1.pose.position.x = w1.x();
+      waypoint1.pose.position.y = w1.y();
+      waypoint1.pose.position.z = 0.0;
+      waypoint1.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(w1.rotation());
+      const RobotClientsDof w2 = navigationPaths.at(navigationProgress).waypoints(1);
+      geometry_msgs::msg::PoseStamped waypoint2;
+      waypoint2.header.frame_id = "map";
+      waypoint2.pose.position.x = w2.x();
+      waypoint2.pose.position.y = w2.y();
+      waypoint2.pose.position.z = 0.0;
+      waypoint2.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(w2.rotation());
+      routeNavigation->Start(waypoint1, waypoint2);
     }
-    openNavigation->Start(goals);
+    else
+    {
+      nav_msgs::msg::Goals goals;
+      goals.header.frame_id = "map";
+      for (int i = 0; i < navigationPaths.at(navigationProgress).waypoints_size(); i++)
+      {
+        geometry_msgs::msg::PoseStamped pose;
+        const RobotClientsDof waypoint = navigationPaths.at(navigationProgress).waypoints(i);
+        pose.pose.position.x = waypoint.x();
+        pose.pose.position.y = waypoint.y();
+        pose.pose.position.z = 0.0;
+        pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(waypoint.rotation());
+        goals.goals.push_back(pose);
+      }
+      openNavigation->Start(goals);
+    }
     navigationProgress++;
   }
   else

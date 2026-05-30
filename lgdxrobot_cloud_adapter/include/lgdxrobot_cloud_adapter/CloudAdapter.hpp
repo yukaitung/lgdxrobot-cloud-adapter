@@ -25,6 +25,7 @@
 #include "Map.hpp"
 #include "OpenNavigation.hpp"
 #include "Exchange.hpp"
+#include "RouteNavigation.hpp"
 
 namespace LGDXRobotCloud
 {
@@ -43,7 +44,8 @@ class CloudAdapter : public rclcpp::Node
 
     // Modules
     std::unique_ptr<Map> map;
-    std::unique_ptr<OpenNavigation> openNavigation;
+    std::shared_ptr<OpenNavigation> openNavigation;
+    std::unique_ptr<RouteNavigation> routeNavigation;
     std::unique_ptr<IExchange> exchangeStream;
 
     std::shared_ptr<CloudSignals> cloudSignals;
@@ -91,6 +93,7 @@ class CloudAdapter : public rclcpp::Node
     lgdxrobot_cloud_msgs::msg::AutoTask currentTask;
     std::vector<RobotClientsPath> navigationPaths;
     std::size_t navigationProgress = 0;
+    bool isRouteNavigation = false;
     
     // Cloud
     std::shared_ptr<grpc::Channel> grpcChannel;
