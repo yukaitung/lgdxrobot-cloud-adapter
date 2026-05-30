@@ -1,6 +1,6 @@
 # Please note that this dockerfile is for building the .deb files only
 
-FROM ros:jazzy AS builder
+FROM ros:kilted AS builder
 
 WORKDIR /src
 COPY . .
