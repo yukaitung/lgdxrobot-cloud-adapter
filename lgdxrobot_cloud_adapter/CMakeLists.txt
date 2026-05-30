@@ -65,7 +65,7 @@ add_library(lgdxrobot_cloud_component SHARED
   src/RobotStatus.cpp
   src/SlamExchangeStream.cpp
   src/Map.cpp
-  src/Navigation.cpp
+  src/OpenNavigation.cpp
 )
 target_link_libraries(lgdxrobot_cloud_component
   ${PROTO_NAME}

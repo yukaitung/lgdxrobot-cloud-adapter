@@ -23,7 +23,7 @@
 
 #include "RobotStatus.hpp"
 #include "Map.hpp"
-#include "Navigation.hpp"
+#include "OpenNavigation.hpp"
 #include "Exchange.hpp"
 
 namespace LGDXRobotCloud
@@ -43,7 +43,7 @@ class CloudAdapter : public rclcpp::Node
 
     // Modules
     std::unique_ptr<Map> map;
-    std::unique_ptr<Navigation> navigation;
+    std::unique_ptr<OpenNavigation> openNavigation;
     std::unique_ptr<IExchange> exchangeStream;
 
     std::shared_ptr<CloudSignals> cloudSignals;

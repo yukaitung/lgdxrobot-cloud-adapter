@@ -52,7 +52,7 @@ void CloudAdapter::Initalise()
   cloudSignals = std::make_shared<CloudSignals>();
   navigationSignals = std::make_shared<NavigationSignals>();
   navProgress = std::make_shared<RobotClientsAutoTaskNavProgress>();
-  navigation = std::make_unique<Navigation>(shared_from_this(), navigationSignals, navProgress);
+  openNavigation = std::make_unique<OpenNavigation>(shared_from_this(), navigationSignals, navProgress);
   if (isSlam)
   {
     map = std::make_unique<Map>(shared_from_this());
@@ -538,7 +538,7 @@ void CloudAdapter::OnHandleClouldExchange(const RobotClientsResponse *response)
     else if (currentTask.task_progress_id == 4)
     {
       RCLCPP_INFO(this->get_logger(), "AutoTask Id: %d aborted.", task.taskid());
-      navigation->Abort();
+      openNavigation->Abort();
       robotStatus.TaskAborted();
     }
     else
@@ -611,13 +611,13 @@ void CloudAdapter::OnHandleSlamExchange(const RobotClientsSlamCommands *respond)
     pose.pose.position.z = 0.0;
     pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(rotation);
     goals.goals.push_back(pose);
-    navigation->Start(goals);
+    openNavigation->Start(goals);
     exchangeSlamStatus = RobotClientsSlamStatus::SlamRunning;
   }
   if (respond->has_abortgoal() && respond->abortgoal() == true)
   {
     RCLCPP_INFO(this->get_logger(), "Aborting the current goal");
-    navigation->Abort();
+    openNavigation->Abort();
   }
   if (respond->has_softwareemergencystopenable() && respond->softwareemergencystopenable() == true)
   {
@@ -644,12 +644,12 @@ void CloudAdapter::OnHandleSlamExchange(const RobotClientsSlamCommands *respond)
   if (respond->has_abortslam() && respond->abortslam() == true)
   {
     RCLCPP_INFO(this->get_logger(), "Aborting the current SLAM");
-    navigation->Abort();
+    openNavigation->Abort();
     Shutdown();
   }
   if (respond->has_completeslam() && respond->completeslam() == true)
   {
-    navigation->Abort();
+    openNavigation->Abort();
     RCLCPP_INFO(this->get_logger(), "Completing the current SLAM and saving the map with 5 seconds blocking");
     map->Save();
     std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -673,7 +673,7 @@ void CloudAdapter::NavigationStart()
       pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(waypoint.rotation());
       goals.goals.push_back(pose);
     }
-    navigation->Start(goals);
+    openNavigation->Start(goals);
     navigationProgress++;
   }
   else

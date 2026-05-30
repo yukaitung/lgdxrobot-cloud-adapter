@@ -1,8 +1,8 @@
-#include "lgdxrobot_cloud_adapter/Navigation.hpp"
+#include "lgdxrobot_cloud_adapter/OpenNavigation.hpp"
 
 using namespace std::chrono_literals;
 
-Navigation::Navigation(rclcpp::Node::SharedPtr node, 
+OpenNavigation::OpenNavigation(rclcpp::Node::SharedPtr node, 
     std::shared_ptr<NavigationSignals> navigationSignalsPtr,
     std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgressPtr
  ) : logger_(node->get_logger())
@@ -15,10 +15,10 @@ Navigation::Navigation(rclcpp::Node::SharedPtr node,
     "navigate_through_poses");
 	planSubscription = node->create_subscription<nav_msgs::msg::Path>("plan",
 		rclcpp::SensorDataQoS().reliable(),
-    std::bind(&Navigation::PlanCallback, this, std::placeholders::_1));
+    std::bind(&OpenNavigation::PlanCallback, this, std::placeholders::_1));
 }
 
-void Navigation::Response(const GoalHandle::SharedPtr &goalHandle)
+void OpenNavigation::Response(const GoalHandle::SharedPtr &goalHandle)
 {
   if (!goalHandle)
   {
@@ -27,7 +27,7 @@ void Navigation::Response(const GoalHandle::SharedPtr &goalHandle)
   }
 }
 
-void Navigation::Feedback(GoalHandle::SharedPtr, 
+void OpenNavigation::Feedback(GoalHandle::SharedPtr, 
   const std::shared_ptr<const NavigateThroughPosesAction::Feedback> feedback)
 {
   lastNavProgress = *navProgress;
@@ -68,7 +68,7 @@ void Navigation::Feedback(GoalHandle::SharedPtr,
   }
 }
 
-void Navigation::Result(const GoalHandle::WrappedResult &result)
+void OpenNavigation::Result(const GoalHandle::WrappedResult &result)
 {
   switch (result.code)
   {
@@ -85,7 +85,7 @@ void Navigation::Result(const GoalHandle::WrappedResult &result)
   isStuck = false;
 }
 
-void Navigation::PlanCallback(const nav_msgs::msg::Path &msg)
+void OpenNavigation::PlanCallback(const nav_msgs::msg::Path &msg)
 {
   navProgress->clear_plan();
   int size = msg.poses.size();
@@ -103,7 +103,7 @@ void Navigation::PlanCallback(const nav_msgs::msg::Path &msg)
   }
 }
 
-void Navigation::Start(nav_msgs::msg::Goals &goals)
+void OpenNavigation::Start(nav_msgs::msg::Goals &goals)
 {
   using namespace std::placeholders;
 
@@ -116,13 +116,13 @@ void Navigation::Start(nav_msgs::msg::Goals &goals)
   goal.poses = goals;
 
   auto goalOption = rclcpp_action::Client<NavigateThroughPosesAction>::SendGoalOptions();
-  goalOption.goal_response_callback = std::bind(&Navigation::Response, this, _1);
-  goalOption.feedback_callback = std::bind(&Navigation::Feedback, this, _1, _2);
-  goalOption.result_callback = std::bind(&Navigation::Result, this, _1);
+  goalOption.goal_response_callback = std::bind(&OpenNavigation::Response, this, _1);
+  goalOption.feedback_callback = std::bind(&OpenNavigation::Feedback, this, _1, _2);
+  goalOption.result_callback = std::bind(&OpenNavigation::Result, this, _1);
   navThroughPosesActionClient->async_send_goal(goal, goalOption);
 }
 
-void Navigation::Abort()
+void OpenNavigation::Abort()
 {
   if (navThroughPosesActionClient->wait_for_action_server())
   {

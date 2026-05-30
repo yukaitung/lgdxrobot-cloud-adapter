@@ -12,7 +12,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-class Navigation
+class OpenNavigation
 {
   using NavigateThroughPosesAction = nav2_msgs::action::NavigateThroughPoses;
   using GoalHandle = rclcpp_action::ClientGoalHandle<NavigateThroughPosesAction>;
@@ -35,7 +35,7 @@ class Navigation
     void PlanCallback(const nav_msgs::msg::Path &msg);
 
   public:
-    Navigation(rclcpp::Node::SharedPtr node,
+    OpenNavigation(rclcpp::Node::SharedPtr node,
       std::shared_ptr<NavigationSignals> navigationSignalsPtr,
       std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgressPtr);
     void Start(nav_msgs::msg::Goals &goals);
