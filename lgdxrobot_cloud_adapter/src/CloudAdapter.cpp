@@ -224,6 +224,33 @@ void CloudAdapter::Initalise()
   }
 }
 
+std::tuple<double, double, double> CloudAdapter::GetCurrentPosition()
+{
+  try
+  {
+    geometry_msgs::msg::TransformStamped t;
+    t = tfBuffer->lookupTransform("base_link", "map", tf2::TimePointZero);
+
+    tf2::Quaternion q(
+        t.transform.rotation.x,
+        t.transform.rotation.y,
+        t.transform.rotation.z,
+        t.transform.rotation.w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    double x = -(t.transform.translation.x * cos(yaw) + t.transform.translation.y * sin(yaw));
+    double y = -(-t.transform.translation.x * sin(yaw) + t.transform.translation.y * cos(yaw));
+
+    return {x, y, yaw};
+  }
+  catch (const tf2::TransformException &ex) 
+  {
+    return {0.0, 0.0, 0.0};
+  }
+}
+
 std::string CloudAdapter::GreetReadCertificate(const char *filename)
 {
   std::ifstream file(filename, std::ios::in);
@@ -381,30 +408,10 @@ void CloudAdapter::ExchangeProcessData()
   {
     exchangeBatteries->AddAlreadyReserved(batteries[i]);
   }
-  try
-  {
-    geometry_msgs::msg::TransformStamped t;
-    t = tfBuffer->lookupTransform("base_link", "map", tf2::TimePointZero);
-
-    tf2::Quaternion q(
-        t.transform.rotation.x,
-        t.transform.rotation.y,
-        t.transform.rotation.z,
-        t.transform.rotation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    exchangeRobotData.mutable_position()->set_x(-(t.transform.translation.x * cos(yaw) + t.transform.translation.y * sin(yaw)));
-    exchangeRobotData.mutable_position()->set_y(-(-t.transform.translation.x * sin(yaw) + t.transform.translation.y * cos(yaw)));
-    exchangeRobotData.mutable_position()->set_rotation(yaw);
-  }
-  catch (const tf2::TransformException &ex) 
-  {
-    exchangeRobotData.mutable_position()->set_x(0.0);
-    exchangeRobotData.mutable_position()->set_y(0.0);
-    exchangeRobotData.mutable_position()->set_rotation(0.0);
-  }
+  auto [x, y, rotation] = GetCurrentPosition();
+  exchangeRobotData.mutable_position()->set_x(x);
+  exchangeRobotData.mutable_position()->set_y(y);
+  exchangeRobotData.mutable_position()->set_rotation(rotation);
   exchangeRobotData.mutable_navprogress()->CopyFrom(*navProgress);
   exchangeRobotData.set_pausetaskassignment(pauseTaskAssignment);
 }
@@ -561,8 +568,8 @@ void CloudAdapter::OnHandleClouldExchange(const RobotClientsResponse *response)
       if (task.paths_size())
       {
         RCLCPP_INFO(this->get_logger(), "This task has %d waypoint(s).", task.paths_size());
-        navigationPaths.clear();
-        navigationPaths.assign(task.paths().begin(), task.paths().end());
+        navigationPath.clear();
+        navigationPath.assign(task.paths().begin(), task.paths().end());
         navigationProgress = 0;
         NavigationStart();
       }
@@ -673,35 +680,37 @@ void CloudAdapter::OnHandleSlamExchange(const RobotClientsSlamCommands *respond)
 
 void CloudAdapter::NavigationStart()
 {
-  if (navigationProgress < navigationPaths.size())
+  if (navigationProgress < navigationPath.size())
   {
     if (isRouteNavigation)
     {
-      // Must be 2 waypoints
-      const RobotClientsDof w1 = navigationPaths.at(navigationProgress).waypoints(0);
-      geometry_msgs::msg::PoseStamped waypoint1;
-      waypoint1.header.frame_id = "map";
-      waypoint1.pose.position.x = w1.x();
-      waypoint1.pose.position.y = w1.y();
-      waypoint1.pose.position.z = 0.0;
-      waypoint1.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(w1.rotation());
-      const RobotClientsDof w2 = navigationPaths.at(navigationProgress).waypoints(1);
-      geometry_msgs::msg::PoseStamped waypoint2;
-      waypoint2.header.frame_id = "map";
-      waypoint2.pose.position.x = w2.x();
-      waypoint2.pose.position.y = w2.y();
-      waypoint2.pose.position.z = 0.0;
-      waypoint2.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(w2.rotation());
-      routeNavigation->Start(waypoint1, waypoint2);
+      // For route navigation, we plan a path from the current position to the next waypoint
+      auto [x, y, rotation] = GetCurrentPosition();
+      geometry_msgs::msg::PoseStamped current;
+      current.header.frame_id = "map";
+      current.pose.position.x = x;
+      current.pose.position.y = y;
+      current.pose.position.z = 0.0;
+      current.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(rotation);
+      const RobotClientsDof w2 = navigationPath.at(navigationProgress);
+      geometry_msgs::msg::PoseStamped goal;
+      goal.header.frame_id = "map";
+      goal.pose.position.x = w2.x();
+      goal.pose.position.y = w2.y();
+      goal.pose.position.z = 0.0;
+      goal.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(w2.rotation());
+      routeNavigation->Start(current, goal);
+      // Plan path to next waypoint
+      navigationProgress++;
     }
     else
     {
+      // For normal navigation, we can just ask NAV2 to follow a path
       nav_msgs::msg::Goals goals;
       goals.header.frame_id = "map";
-      for (int i = 0; i < navigationPaths.at(navigationProgress).waypoints_size(); i++)
+      for (auto &waypoint : navigationPath)
       {
         geometry_msgs::msg::PoseStamped pose;
-        const RobotClientsDof waypoint = navigationPaths.at(navigationProgress).waypoints(i);
         pose.pose.position.x = waypoint.x();
         pose.pose.position.y = waypoint.y();
         pose.pose.position.z = 0.0;
@@ -709,8 +718,9 @@ void CloudAdapter::NavigationStart()
         goals.goals.push_back(pose);
       }
       openNavigation->Start(goals);
+      // go to next step
+      navigationProgress = navigationPath.size();
     }
-    navigationProgress++;
   }
   else
   {

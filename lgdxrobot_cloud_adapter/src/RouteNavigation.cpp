@@ -18,7 +18,7 @@ void RouteNavigation::Response(const GoalHandle::SharedPtr &goalHandle)
 {
   if (!goalHandle)
   {
-    RCLCPP_ERROR(logger_, "computeAndTrackRoute goal was rejected by server, the task will be aborted.");
+    RCLCPP_ERROR(logger_, "ComputeAndTrackRoute goal was rejected by server, the task will be aborted.");
     navigationSignals->Abort();
   }
 }
@@ -27,15 +27,15 @@ void RouteNavigation::Feedback(GoalHandle::SharedPtr,
   const std::shared_ptr<const ComputeAndTrackRouteAction::Feedback> feedback)
 {
   using namespace std::placeholders;
-
   if (feedback->current_edge_id != currentEdgeId)
   {
     RCLCPP_INFO(logger_, "Current edge: %d, last node: %d next node: %d", feedback->current_edge_id, feedback->last_node_id, feedback->next_node_id);
     currentEdgeId = feedback->current_edge_id;
   }
-  if (feedback->rerouted)
+  if (!haveNavigationGoal)
   {
-    RCLCPP_INFO(logger_, "Getting a new route.");
+    RCLCPP_INFO(logger_, ">>>>> Starting route navigation.");
+    haveNavigationGoal = true;
     
     nav_msgs::msg::Goals goals;
     goals.header.frame_id = "map";
@@ -46,11 +46,34 @@ void RouteNavigation::Feedback(GoalHandle::SharedPtr,
     }
     openNavigation->Start(goals);
   }
+  else
+  {
+    if (feedback->rerouted)
+    {
+      RCLCPP_INFO(logger_, ">>>>> // >>>>> The route is changed.");
+      
+      nav_msgs::msg::Goals goals;
+      goals.header.frame_id = "map";
+      goals.goals = feedback->path.poses;
+      for (auto &pose : goals.goals)
+      {
+        pose.header.frame_id = "map";
+      }
+      openNavigation->Start(goals);
+    }
+  }
 }
 
 void RouteNavigation::Result(const GoalHandle::WrappedResult &result)
 {
-  RCLCPP_INFO(logger_, "computeAndTrackRoute completed.");
+  RCLCPP_INFO(logger_, ">>>>> ComputeAndTrackRoute completed. <<<<<");
+  if (haveNavigationGoal)
+  {
+    // The OpenNavigation class will handle the result
+    haveNavigationGoal = false;
+    return;
+  }
+
   switch (result.code)
   {
     case rclcpp_action::ResultCode::SUCCEEDED:
@@ -67,11 +90,13 @@ void RouteNavigation::Result(const GoalHandle::WrappedResult &result)
 void RouteNavigation::Start(geometry_msgs::msg::PoseStamped &waypoint1, geometry_msgs::msg::PoseStamped &waypoint2)
 {
   using namespace std::placeholders;
-
   while (!computeAndTrackRouteActionClient->wait_for_action_server(5s))
   {
-    RCLCPP_ERROR(logger_, "navThroughPoses action server is not available yet.");
+    RCLCPP_ERROR(logger_, "ComputeAndTrackRoute action server is not available yet.");
   }
+
+  haveNavigationGoal = false;
+  currentEdgeId = -1;
 
   auto goal = ComputeAndTrackRouteAction::Goal();
   goal.start = waypoint1;
@@ -87,6 +112,14 @@ void RouteNavigation::Start(geometry_msgs::msg::PoseStamped &waypoint1, geometry
 
 void RouteNavigation::Abort()
 {
+  if (haveNavigationGoal)
+  {
+    haveNavigationGoal = false;
+    // Ask OpenNavigation to abort and send the result
+    openNavigation->Abort();
+    return;
+  }
+
   if (computeAndTrackRouteActionClient->wait_for_action_server())
   {
     // The NAV2 stack is running, cancel the goal
@@ -95,11 +128,11 @@ void RouteNavigation::Abort()
       {
         if (response)
         {
-          RCLCPP_INFO(logger_, "Navigation aborted.");
+          RCLCPP_INFO(logger_, "Route navigation aborted.");
         }
         else
         {
-          RCLCPP_ERROR(logger_, "Navigation abort failed.");
+          RCLCPP_ERROR(logger_, "Route navigation abort failed.");
         }
       }
     );

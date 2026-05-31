@@ -26,6 +26,7 @@ class RouteNavigation
     std::shared_ptr<OpenNavigation> openNavigation;
     rclcpp_action::Client<ComputeAndTrackRouteAction>::SharedPtr computeAndTrackRouteActionClient;
     int currentEdgeId = -1;
+    bool haveNavigationGoal = false;
 
     void Response(const GoalHandle::SharedPtr &goalHandle);
     void Feedback(GoalHandle::SharedPtr, const std::shared_ptr<const ComputeAndTrackRouteAction::Feedback> feedback);

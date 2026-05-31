@@ -91,7 +91,7 @@ class CloudAdapter : public rclcpp::Node
 
     // AutoTask
     lgdxrobot_cloud_msgs::msg::AutoTask currentTask;
-    std::vector<RobotClientsPath> navigationPaths;
+    std::vector<RobotClientsDof> navigationPath;
     std::size_t navigationProgress = 0;
     bool isRouteNavigation = false;
     
@@ -103,6 +103,7 @@ class CloudAdapter : public rclcpp::Node
     CloudErrorRetryData cloudErrorRetryData;
 
     void Initalise();
+    std::tuple<double, double, double> GetCurrentPosition();
 
     // Greet
     std::string GreetReadCertificate(const char *filename);

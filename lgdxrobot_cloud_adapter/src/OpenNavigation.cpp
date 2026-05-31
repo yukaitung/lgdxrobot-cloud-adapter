@@ -132,11 +132,11 @@ void OpenNavigation::Abort()
       {
         if (response)
         {
-          RCLCPP_INFO(logger_, "Navigation aborted.");
+          RCLCPP_INFO(logger_, "Open navigation aborted.");
         }
         else
         {
-          RCLCPP_ERROR(logger_, "Navigation abort failed.");
+          RCLCPP_ERROR(logger_, "Open navigation abort failed.");
         }
       }
     );

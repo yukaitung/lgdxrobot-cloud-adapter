@@ -80,6 +80,15 @@ message RobotClientsSystemInfo {
 
 message RobotClientsMapInfo {
   string Route = 1;
+  int32 MapWidth = 2;
+  int32 MapHeight = 3;
+  double Resolution = 4;
+  double OriginX = 5;
+  double OriginY = 6;
+  double OriginRotation = 7;
+  string Map = 8;
+  string KeepoutMask = 9;
+  string SpeedMask = 10;
 }
 
 message RobotClientsChassisInfo {
@@ -141,16 +150,12 @@ message RobotClientsRobotCommands {
   optional bool PauseTaskAssignmentDisable = 6;
 }
 
-message RobotClientsPath {
-  repeated RobotClientsDof Waypoints = 1;
-}
-
 message RobotClientsAutoTask {
   int32 TaskId = 1;
   string TaskName = 2;
   int32 TaskProgressId = 3;
   string TaskProgressName = 4;
-  repeated RobotClientsPath Paths = 5;
+  repeated RobotClientsDof Paths = 5;
   string NextToken = 6;
 }
 
