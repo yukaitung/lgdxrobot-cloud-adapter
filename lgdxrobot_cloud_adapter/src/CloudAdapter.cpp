@@ -356,6 +356,16 @@ void CloudAdapter::Greet(std::string mcuSN)
           SaveMap::SaveRoute(route, this->get_logger());
           isRouteNavigation = true;
         }
+        MapParameters mapParameters;
+        mapParameters.mapWidth = response->mapinfo().mapwidth();
+        mapParameters.mapHeight = response->mapinfo().mapheight();
+        mapParameters.resolution = response->mapinfo().resolution();
+        mapParameters.originX = response->mapinfo().originx();
+        mapParameters.originY = response->mapinfo().originy();
+        mapParameters.originRotation = response->mapinfo().originrotation();
+        SaveMap::SaveMapData(mapParameters, response->mapinfo().map(), this->get_logger());
+        SaveMap::SaveKeepoutMask(mapParameters, response->mapinfo().keepoutmask(), this->get_logger());
+        SaveMap::SaveSpeedMask(mapParameters, response->mapinfo().speedmask(), this->get_logger());
 
         RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
         robotStatus.ConnnectedCloud();
