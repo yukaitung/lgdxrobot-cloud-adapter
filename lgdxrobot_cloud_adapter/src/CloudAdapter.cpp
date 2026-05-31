@@ -9,6 +9,7 @@
 #include "lgdxrobot_cloud_adapter/CloudAdapter.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav_msgs/msg/goals.hpp"
+#include "lgdxrobot_cloud_adapter/SaveMap.hpp"
 
 namespace LGDXRobotCloud
 {
@@ -352,7 +353,7 @@ void CloudAdapter::Greet(std::string mcuSN)
         std::string route = response->mapinfo().route();
         if (!route.empty())
         {
-          GreetWriteRoute(route);
+          SaveMap::SaveRoute(route, this->get_logger());
           isRouteNavigation = true;
         }
 
@@ -376,18 +377,6 @@ void CloudAdapter::Greet(std::string mcuSN)
     delete request;
     delete response;
   });
-}
-
-void CloudAdapter::GreetWriteRoute(const std::string& route)
-{
-  std::ofstream file("route.geojson", std::ios::out | std::ios::trunc);
-  if (!file.is_open())
-  {
-    RCLCPP_ERROR(this->get_logger(), "Unable to write route.geojson");
-    return;
-  }
-  file << route;
-  file.close();
 }
 
 void CloudAdapter::ExchangeProcessData()

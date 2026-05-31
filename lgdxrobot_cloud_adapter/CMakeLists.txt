@@ -67,6 +67,7 @@ add_library(lgdxrobot_cloud_component SHARED
   src/Map.cpp
   src/OpenNavigation.cpp
   src/RouteNavigation.cpp
+  src/SaveMap.cpp
 )
 target_link_libraries(lgdxrobot_cloud_component
   ${PROTO_NAME}

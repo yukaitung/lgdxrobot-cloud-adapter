@@ -112,7 +112,6 @@ class CloudAdapter : public rclcpp::Node
     #endif
     void GreetSetSystemInfo(RobotClientsSystemInfo *info);
     void Greet(std::string mcuSN);
-    void GreetWriteRoute(const std::string& route);
 
     void ExchangeProcessData();
     void CloudExchange();
