@@ -83,13 +83,28 @@ void SaveMap::SaveMapData(const MapParameters &parameters, const std::string& ma
 
 void SaveMap::SaveKeepoutMask(const MapParameters &parameters, const std::string& mapStringBytes, rclcpp::Logger logger)
 {
-  
-  SaveYaml("keepout", parameters, false, logger);
-  SavePgm("keepout", parameters.mapWidth, parameters.mapHeight, mapStringBytes, logger);
+  if (mapStringBytes.empty())
+  {
+    RCLCPP_INFO(logger, "No keepout mask is set.");
+  }
+  else
+  {
+    RCLCPP_INFO(logger, "Keepout mask is set.");
+  }
+  SaveYaml("keepout_mask", parameters, true, logger);
+  SavePgm("keepout_mask", parameters.mapWidth, parameters.mapHeight, mapStringBytes, logger);
 }
 
 void SaveMap::SaveSpeedMask(const MapParameters &parameters, const std::string& mapStringBytes, rclcpp::Logger logger)
 {
-  SaveYaml("speed", parameters, true, logger);
-  SavePgm("speed", parameters.mapWidth, parameters.mapHeight, mapStringBytes, logger);
+  if (mapStringBytes.empty())
+  {
+    RCLCPP_INFO(logger, "No speed mask is set.");
+  }
+  else
+  {
+    RCLCPP_INFO(logger, "Speed mask is set.");
+  }
+  SaveYaml("speed_mask", parameters, true, logger);
+  SavePgm("speed_mask", parameters.mapWidth, parameters.mapHeight, mapStringBytes, logger);
 }

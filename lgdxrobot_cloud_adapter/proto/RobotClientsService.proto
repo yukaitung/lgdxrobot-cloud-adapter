@@ -86,9 +86,9 @@ message RobotClientsMapInfo {
   double OriginX = 5;
   double OriginY = 6;
   double OriginRotation = 7;
-  string Map = 8;
-  string KeepoutMask = 9;
-  string SpeedMask = 10;
+  bytes Map = 8;
+  bytes KeepoutMask = 9;
+  bytes SpeedMask = 10;
 }
 
 message RobotClientsChassisInfo {
