@@ -11,6 +11,8 @@
 #include "nav_msgs/msg/goals.hpp"
 #include "lgdxrobot_cloud_adapter/SaveMap.hpp"
 
+using namespace std::chrono_literals;
+
 namespace LGDXRobotCloud
 {
   
@@ -372,7 +374,15 @@ void CloudAdapter::Greet(std::string mcuSN)
         exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
 
         // Start Nav2 after loading maps
-        while (!nav2DelayClient->wait_for_service()) {}
+        while (!nav2DelayClient->wait_for_service(1s)) {
+          if (!rclcpp::ok()) {
+            RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+            delete context;
+            delete request;
+            delete response;
+            return;
+          }
+        }
         nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
       }
 

@@ -109,6 +109,10 @@ void OpenNavigation::Start(nav_msgs::msg::Goals &goals)
 
   while (!navThroughPosesActionClient->wait_for_action_server(5s))
   {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(logger_, "Interrupted while waiting for the action server. Exiting.");
+      return;
+    }
     RCLCPP_ERROR(logger_, "navThroughPoses action server is not available yet.");
   }
 

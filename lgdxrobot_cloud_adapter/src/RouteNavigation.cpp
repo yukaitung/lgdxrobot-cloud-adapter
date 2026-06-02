@@ -92,6 +92,10 @@ void RouteNavigation::Start(geometry_msgs::msg::PoseStamped &waypoint1, geometry
   using namespace std::placeholders;
   while (!computeAndTrackRouteActionClient->wait_for_action_server(5s))
   {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(logger_, "Interrupted while waiting for the action server. Exiting.");
+      return;
+    }
     RCLCPP_ERROR(logger_, "ComputeAndTrackRoute action server is not available yet.");
   }
 
