@@ -370,10 +370,11 @@ void CloudAdapter::Greet(std::string mcuSN)
         RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
         robotStatus.ConnnectedCloud();
         exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
+
+        // Start Nav2 after loading maps
+        while (!nav2DelayClient->wait_for_service()) {}
+        nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
       }
-      // Start Nav2
-      while (!nav2DelayClient->wait_for_service()) {}
-      nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
 
       // Start the timer to exchange data
       cloudExchangeTimer->reset();
@@ -626,6 +627,7 @@ void CloudAdapter::OnHandleSlamExchange(const RobotClientsSlamCommands *respond)
     nav_msgs::msg::Goals goals;
     goals.header.frame_id = "map";
     geometry_msgs::msg::PoseStamped pose;
+    pose.header.frame_id = "map";
     pose.pose.position.x = x;
     pose.pose.position.y = y;
     pose.pose.position.z = 0.0;
