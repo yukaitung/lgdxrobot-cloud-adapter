@@ -722,6 +722,7 @@ void CloudAdapter::NavigationStart()
       for (auto &waypoint : navigationPath)
       {
         geometry_msgs::msg::PoseStamped pose;
+        pose.header.frame_id = "map";
         pose.pose.position.x = waypoint.x();
         pose.pose.position.y = waypoint.y();
         pose.pose.position.z = 0.0;
