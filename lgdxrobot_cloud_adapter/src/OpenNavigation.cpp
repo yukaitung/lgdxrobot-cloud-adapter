@@ -22,7 +22,7 @@ void OpenNavigation::Response(const GoalHandle::SharedPtr &goalHandle)
 {
   if (!goalHandle)
   {
-    RCLCPP_ERROR(logger_, "navThroughPoses goal was rejected by server, the task will be aborted.");
+    RCLCPP_ERROR(logger_, "O>>X NavThroughPoses goal was rejected by server, the task will be aborted.");
     navigationSignals->Abort();
   }
 }
@@ -70,6 +70,8 @@ void OpenNavigation::Feedback(GoalHandle::SharedPtr,
 
 void OpenNavigation::Result(const GoalHandle::WrappedResult &result)
 {
+  RCLCPP_INFO(logger_, "O>== Open navigation Completed");
+
   switch (result.code)
   {
     case rclcpp_action::ResultCode::SUCCEEDED:
@@ -113,8 +115,10 @@ void OpenNavigation::Start(nav_msgs::msg::Goals &goals)
       RCLCPP_ERROR(logger_, "Interrupted while waiting for the action server. Exiting.");
       return;
     }
-    RCLCPP_ERROR(logger_, "navThroughPoses action server is not available yet.");
+    RCLCPP_ERROR(logger_, "NavThroughPoses action server is not available yet.");
   }
+
+  RCLCPP_INFO(logger_, "O>>> Starting open navigation.");
 
   auto goal = NavigateThroughPosesAction::Goal();
   goal.poses = goals;
@@ -128,6 +132,7 @@ void OpenNavigation::Start(nav_msgs::msg::Goals &goals)
 
 void OpenNavigation::Abort()
 {
+  RCLCPP_INFO(logger_, "O>XX Aborting open navigation.");
   if (navThroughPosesActionClient->wait_for_action_server())
   {
     // The NAV2 stack is running, cancel the goal
