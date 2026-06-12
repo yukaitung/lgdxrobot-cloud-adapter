@@ -1,2 +1,2 @@
 bool hardware_emergency_stop_enabled
-float32[2] batteries_voltage
+float32[2] batteries_percentage

@@ -114,13 +114,13 @@ void CloudAdapter::Initalise()
           criticalStatus.set_hardwareemergencystop(false);
           TryExitCriticalStatus();
         }
-        if (msg->batteries_voltage.size() > 0)
+        if (msg->batteries_percentage.size() > 0)
         {
-          batteries[0] = msg->batteries_voltage[0];
+          batteries[0] = msg->batteries_percentage[0];
         }
-        if (msg->batteries_voltage.size() > 1)
+        if (msg->batteries_percentage.size() > 1)
         {
-          batteries[1] = msg->batteries_voltage[1];
+          batteries[1] = msg->batteries_percentage[1];
         }
       });
     // Topics

@@ -91,17 +91,6 @@ message RobotClientsMapInfo {
   bytes SpeedMask = 10;
 }
 
-message RobotClientsChassisInfo {
-  int32 RobotTypeId = 1;
-  double ChassisLX = 2;
-  double ChassisLY = 3;
-  int32 ChassisWheelCount = 4;
-  double ChassisWheelRadius = 5;
-  int32 BatteryCount = 6;
-  double BatteryMaxVoltage = 7;
-  double BatteryMinVoltage = 8;
-}
-
 message RobotClientsGreet {
   RobotClientsSystemInfo SystemInfo = 1;
 }
@@ -109,7 +98,6 @@ message RobotClientsGreet {
 message RobotClientsGreetResponse {
   RobotClientsResultStatus Status = 1;
   string AccessToken = 2;
-  RobotClientsChassisInfo ChassisInfo = 3;
   RobotClientsMapInfo MapInfo = 4;
 }
 
