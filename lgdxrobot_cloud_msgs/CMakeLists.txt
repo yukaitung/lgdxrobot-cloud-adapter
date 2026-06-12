@@ -16,7 +16,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotData.msg"
   "srv/AutoTaskNext.srv"
   "srv/AutoTaskAbort.srv"
-  "srv/McuSn.srv"
 )
 ament_export_dependencies(rosidl_default_runtime)
 rosidl_get_typesupport_target(cpp_typesupport_target

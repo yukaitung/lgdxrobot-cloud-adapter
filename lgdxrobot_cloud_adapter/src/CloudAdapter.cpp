@@ -34,9 +34,6 @@ void CloudAdapter::Initalise()
   auto cloudSlamEnableParam = rcl_interfaces::msg::ParameterDescriptor{};
   cloudSlamEnableParam.description = "Enable SLAM Mode.";
   this->declare_parameter("slam_enable", false, cloudSlamEnableParam);
-  auto cloudNeedMcuSn = rcl_interfaces::msg::ParameterDescriptor{};
-  cloudSlamEnableParam.description = "Require MCU Serial Number before connecting to the cloud.";
-  this->declare_parameter("need_mcu_sn", false, cloudNeedMcuSn);
   auto cloudAddressParam = rcl_interfaces::msg::ParameterDescriptor{};
   cloudAddressParam.description = "Address of LGDXRobot Cloud.";
   this->declare_parameter("address", "", cloudAddressParam);
@@ -200,31 +197,7 @@ void CloudAdapter::Initalise()
   grpcStub = RobotClientsService::NewStub(grpcChannel);
   accessToken = grpc::AccessTokenCredentials("");
 
-  bool needMcuSn = this->get_parameter("need_mcu_sn").as_bool();
-  if (needMcuSn)
-  {
-    RCLCPP_INFO(this->get_logger(), "Awaiting MCU Serial Number...");
-    // Require MCU Serial Number before connecting to the cloud
-    mcuSerialNumberService = this->create_service<lgdxrobot_cloud_msgs::srv::McuSn>("mcu_sn",
-      [this](const std::shared_ptr<lgdxrobot_cloud_msgs::srv::McuSn::Request> request,
-        std::shared_ptr<lgdxrobot_cloud_msgs::srv::McuSn::Response> response)
-      {
-        if (hasMcuSn == false && !request->mcu_sn.empty())
-        {
-          hasMcuSn = true;
-          Greet(request->mcu_sn);
-          response->success = true;
-        }
-        else
-        {
-          response->success = false;
-        }
-      });
-  }
-  else
-  {
-    Greet("");
-  }
+  Greet();
 }
 
 std::tuple<double, double, double> CloudAdapter::GetCurrentPosition()
@@ -317,9 +290,8 @@ void CloudAdapter::GreetSetSystemInfo(RobotClientsSystemInfo *info)
   info->set_rammib(hwinfo::unit::bytes_to_MiB(memory.total_Bytes()));
 }
 
-void CloudAdapter::Greet(std::string mcuSN)
+void CloudAdapter::Greet()
 {
-  cloudErrorRetryData.mcuSerialNumber = mcuSN;
   RCLCPP_INFO(this->get_logger(), "Connecting to the cloud.");
   
   grpc::ClientContext *context = new grpc::ClientContext();
@@ -329,10 +301,6 @@ void CloudAdapter::Greet(std::string mcuSN)
   RobotClientsGreet *request = new RobotClientsGreet();
   RobotClientsSystemInfo *systemInfo = new RobotClientsSystemInfo();
   GreetSetSystemInfo(systemInfo);
-  if(!mcuSN.empty())
-  {
-    systemInfo->set_mcuserialnumber(mcuSN);
-  }
   request->set_allocated_systeminfo(systemInfo);
 
   RobotClientsGreetResponse *response = new RobotClientsGreetResponse();
@@ -804,7 +772,7 @@ void CloudAdapter::TryExitCriticalStatus()
 void CloudAdapter::HandleError()
 {
   cloudRetryTimer->cancel();
-  Greet(cloudErrorRetryData.mcuSerialNumber);
+  Greet();
   // set hasError to false when greet success
 }
 

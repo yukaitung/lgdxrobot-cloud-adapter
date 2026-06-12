@@ -32,7 +32,6 @@ namespace LGDXRobotCloud
 
 struct CloudErrorRetryData
 {
-  std::string mcuSerialNumber;
   RobotClientsNextToken nextToken;
   RobotClientsAbortToken abortToken;
 };
@@ -59,7 +58,6 @@ class CloudAdapter : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr softwareEmergencyStopPublisherTimer;
     rclcpp::Publisher<lgdxrobot_cloud_msgs::msg::AutoTask>::SharedPtr autoTaskPublisher;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr softwareEmergencyStopPublisher;
-    rclcpp::Service<lgdxrobot_cloud_msgs::srv::McuSn>::SharedPtr mcuSerialNumberService;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::AutoTaskNext>::SharedPtr autoTaskNextService;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::AutoTaskAbort>::SharedPtr autoTaskAbortService;
     rclcpp::Subscription<lgdxrobot_cloud_msgs::msg::RobotData>::SharedPtr robotDataSubscription;
@@ -70,7 +68,6 @@ class CloudAdapter : public rclcpp::Node
 
     // Robot Data
     RobotStatus robotStatus;
-    bool hasMcuSn = false;
     bool isSlam = false;
     bool pauseTaskAssignment = false;
     lgdxrobot_cloud_msgs::msg::RobotData robotData;
@@ -111,7 +108,7 @@ class CloudAdapter : public rclcpp::Node
     std::string GreetSetMotherBoardSN();
     #endif
     void GreetSetSystemInfo(RobotClientsSystemInfo *info);
-    void Greet(std::string mcuSN);
+    void Greet();
 
     void ExchangeProcessData();
     void CloudExchange();

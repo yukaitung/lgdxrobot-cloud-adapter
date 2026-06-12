@@ -75,7 +75,6 @@ message RobotClientsSystemInfo {
   string Gpu = 6;
   string Os = 7;
   bool Is32Bit = 8;
-  string McuSerialNumber = 9;
 }
 
 message RobotClientsMapInfo {
