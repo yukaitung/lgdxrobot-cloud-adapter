@@ -121,10 +121,8 @@ void RouteNavigation::Abort()
   RCLCPP_INFO(logger_, "R>XX Aborting route navigation.");
   if (haveNavigationGoal)
   {
-    haveNavigationGoal = false;
-    // Ask OpenNavigation to abort and send the result
+    // Stop OpenNavigation as well
     openNavigation->Abort();
-    return;
   }
 
   if (computeAndTrackRouteActionClient->wait_for_action_server())
@@ -144,5 +142,10 @@ void RouteNavigation::Abort()
       }
     );
   }
-  navigationSignals->Abort();
+
+  if (!haveNavigationGoal)
+  {
+    // The OpenNavigation class will handle the signal
+    navigationSignals->Abort();
+  }
 }
