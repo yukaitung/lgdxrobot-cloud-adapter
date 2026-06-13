@@ -24,6 +24,7 @@
   <buildtool_depend>rclcpp</buildtool_depend>
   <buildtool_depend>std_msgs</buildtool_depend>
   <buildtool_depend>std_srvs</buildtool_depend>
+  <buildtool_depend>lifecycle_msgs</buildtool_depend>
 
   <exec_depend>boost</exec_depend>
   <exec_depend>libgrpc</exec_depend>
@@ -35,6 +36,7 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
   
   <export>
     <build_type>ament_cmake</build_type>

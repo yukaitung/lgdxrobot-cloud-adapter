@@ -109,6 +109,7 @@ class CloudAdapter : public rclcpp::Node
     #endif
     void GreetSetSystemInfo(RobotClientsSystemInfo *info);
     void Greet();
+    void WaitForNav2();
 
     void ExchangeProcessData();
     void CloudExchange();

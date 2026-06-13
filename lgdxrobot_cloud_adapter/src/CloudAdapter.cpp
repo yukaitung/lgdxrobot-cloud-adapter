@@ -10,6 +10,8 @@
 #include "nav2_util/geometry_utils.hpp"
 #include "nav_msgs/msg/goals.hpp"
 #include "lgdxrobot_cloud_adapter/SaveMap.hpp"
+#include "lifecycle_msgs/srv/get_state.hpp"
+#include "nav2_msgs/srv/set_initial_pose.hpp"
 
 using namespace std::chrono_literals;
 
@@ -337,11 +339,8 @@ void CloudAdapter::Greet()
         SaveMap::SaveKeepoutMask(mapParameters, response->mapinfo().keepoutmask(), this->get_logger());
         SaveMap::SaveSpeedMask(mapParameters, response->mapinfo().speedmask(), this->get_logger());
 
-        RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
-        robotStatus.ConnnectedCloud();
-        exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
-
         // Start Nav2 after loading maps
+        RCLCPP_INFO(this->get_logger(), "Waiting for Nav2 to be ready.");
         while (!nav2DelayClient->wait_for_service(1s)) {
           if (!rclcpp::ok()) {
             RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
@@ -352,6 +351,12 @@ void CloudAdapter::Greet()
           }
         }
         nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
+        WaitForNav2();
+        RCLCPP_INFO(this->get_logger(), "Nav2 is ready.");
+
+        RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
+        robotStatus.ConnnectedCloud();
+        exchangeStream = std::make_unique<CloudExchangeType>(grpcRealtimeStub.get(), accessToken, cloudSignals);
       }
 
       // Start the timer to exchange data
@@ -366,6 +371,30 @@ void CloudAdapter::Greet()
     delete request;
     delete response;
   });
+}
+
+void CloudAdapter::WaitForNav2()
+{
+  auto client = this->create_client<lifecycle_msgs::srv::GetState>("bt_navigator/get_state");
+  while (!client->wait_for_service(1s)) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+      return;
+    }
+  }
+  bool isReady = false;
+  while (!isReady)
+  {
+    auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
+    client->async_send_request(request, [this, &isReady](rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedFuture future)
+    {
+      auto result = future.get();
+      if (result->current_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        isReady = true;
+      }
+    });
+  }
 }
 
 void CloudAdapter::ExchangeProcessData()

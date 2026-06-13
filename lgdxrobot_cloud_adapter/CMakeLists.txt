@@ -49,6 +49,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(lgdxrobot_cloud_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 
 include_directories(include)
 
@@ -85,6 +86,7 @@ ament_target_dependencies(lgdxrobot_cloud_component
   lgdxrobot_cloud_msgs
   std_msgs
   std_srvs
+  lifecycle_msgs
 )
 
 rclcpp_components_register_node(lgdxrobot_cloud_component
