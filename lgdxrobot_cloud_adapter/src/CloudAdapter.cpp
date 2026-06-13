@@ -394,6 +394,7 @@ void CloudAdapter::WaitForNav2()
         isReady = true;
       }
     });
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 
