@@ -171,7 +171,7 @@ float SystemInfo::GetCpuUsage()
   float cpuUsage = 0.0;
   string output = RunCommand("mpstat | awk '/all/ {print $NF}'");
   cpuUsage = stof(output);
-  return cpuUsage;
+  return (100.0 - cpuUsage);
 }
 
 std::pair<int, int> SystemInfo::GetMemoryUsage()
