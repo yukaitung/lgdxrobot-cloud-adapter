@@ -26,6 +26,7 @@
 #include "OpenNavigation.hpp"
 #include "Exchange.hpp"
 #include "RouteNavigation.hpp"
+#include "SystemInfo.hpp"
 
 namespace LGDXRobotCloud
 {
@@ -46,6 +47,7 @@ class CloudAdapter : public rclcpp::Node
     std::shared_ptr<OpenNavigation> openNavigation;
     std::unique_ptr<RouteNavigation> routeNavigation;
     std::unique_ptr<IExchange> exchangeStream;
+    std::unique_ptr<SystemInfo> systemInfo;
 
     std::shared_ptr<CloudSignals> cloudSignals;
     std::shared_ptr<NavigationSignals> navigationSignals;
@@ -104,9 +106,7 @@ class CloudAdapter : public rclcpp::Node
 
     // Greet
     std::string GreetReadCertificate(const char *filename);
-    #ifdef __linux__ 
-    std::string GreetSetMotherBoardSN();
-    #endif
+    
     void GreetSetSystemInfo(RobotClientsSystemInfo *info);
     void Greet();
     void WaitForNav2();

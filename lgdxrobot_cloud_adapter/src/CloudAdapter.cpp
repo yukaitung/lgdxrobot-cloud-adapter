@@ -53,6 +53,7 @@ void CloudAdapter::Initalise()
   navProgress = std::make_shared<RobotClientsAutoTaskNavProgress>();
   openNavigation = std::make_shared<OpenNavigation>(shared_from_this(), navigationSignals, navProgress);
   routeNavigation = std::make_unique<RouteNavigation>(shared_from_this(), navigationSignals, openNavigation);
+  systemInfo = std::make_unique<SystemInfo>(shared_from_this());
   if (isSlam)
   {
     map = std::make_unique<Map>(shared_from_this());
@@ -239,26 +240,27 @@ std::string CloudAdapter::GreetReadCertificate(const char *filename)
   return {};
 }
 
-#ifdef __linux__ 
-std::string CloudAdapter::GreetSetMotherBoardSN()
+void CloudAdapter::GreetSetSystemInfo(RobotClientsSystemInfo *info)
 {
-  std::ifstream file("/sys/class/dmi/id/board_serial", std::ios::in);
-  std::string serialNumber;
-  if (file.is_open())
+  std::unordered_map<std::string, std::string> cpuInfo = systemInfo->GetCpu();
+  std::string cpu;
+  if (!cpuInfo["Vendor ID"].empty() && !cpuInfo["Model name"].empty())
   {
-    std::getline(file, serialNumber);
+    cpu = cpuInfo["Vendor ID"] + " - " + cpuInfo["Model name"];
   }
   else
   {
-    RCLCPP_ERROR(this->get_logger(), "Unable to read motherboard serial number.");
+    cpu = cpuInfo["Vendor ID"] + cpuInfo["Model name"];
   }
-  return serialNumber;
-}
-#endif
-
-void CloudAdapter::GreetSetSystemInfo(RobotClientsSystemInfo *info)
-{
-
+  info->set_cpu(cpu);
+  info->set_cpucores(stoi(cpuInfo["CPU(s)"]));
+  info->set_cpuarchitecture(cpuInfo["Architecture"]);
+  info->set_islittleendian(cpuInfo["Byte Order"].compare("Little Endian") == 0);
+  info->set_rammib(systemInfo->GetMemory());
+  info->set_motherboard(systemInfo->GetMotherboardName());
+  info->set_motherboardserialnumber(systemInfo->GetMotherboardSerialNumber());
+  info->set_gpu(systemInfo->GetGpu());
+  info->set_os(systemInfo->GetOs());
 }
 
 void CloudAdapter::Greet()

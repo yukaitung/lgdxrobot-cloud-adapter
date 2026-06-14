@@ -48,6 +48,16 @@ message RobotClientsAutoTaskNavProgress {
   repeated RobotClients2Dof Plan = 5;
 }
 
+message RobotClientsSystemMonitoringInfo {
+  float CpuUsage = 1;
+  int32 MemoryTotal = 2;
+  int32 MemoryUsed = 3;
+  int32 SwapTotal = 4;
+  int32 SwapUsed = 5;
+  int32 DiskTotal = 6;
+  int32 DiskUsed = 7;
+}
+
 // Final Data
 message RobotClientsData {
   RobotClientsRobotStatus RobotStatus = 1;
@@ -56,6 +66,7 @@ message RobotClientsData {
   RobotClientsDof Position = 4;
   RobotClientsAutoTaskNavProgress NavProgress = 5;
   bool PauseTaskAssignment = 6;
+  RobotClientsSystemMonitoringInfo SystemMonitoringInfo = 7;
 }
 
 /*
@@ -68,13 +79,14 @@ enum RobotClientsResultStatus {
 
 message RobotClientsSystemInfo {
   string Cpu = 1;
-  string Motherboard = 2;
-  string MotherboardSerialNumber = 3;
+  int32 CpuCores = 2;
+  string CpuArchitecture = 3;
   bool IsLittleEndian = 4;
   int32 RamMiB = 5;
-  string Gpu = 6;
-  string Os = 7;
-  bool Is32Bit = 8;
+  string Motherboard = 6;
+  string MotherboardSerialNumber = 7;
+  string Gpu = 8;
+  string Os = 9;
 }
 
 message RobotClientsMapInfo {
