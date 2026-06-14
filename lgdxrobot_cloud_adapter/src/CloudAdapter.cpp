@@ -2,9 +2,6 @@
 #include <random>
 #include <fstream>
 
-#include "hwinfo/hwinfo.h"
-#include "hwinfo/utils/unit.h"
-
 #include <rclcpp_components/register_node_macro.hpp>
 #include "lgdxrobot_cloud_adapter/CloudAdapter.hpp"
 #include "nav2_util/geometry_utils.hpp"
@@ -261,35 +258,7 @@ std::string CloudAdapter::GreetSetMotherBoardSN()
 
 void CloudAdapter::GreetSetSystemInfo(RobotClientsSystemInfo *info)
 {
-  hwinfo::MainBoard main_board;
-  info->set_motherboard(main_board.name());
-  #ifdef __linux__ 
-    info->set_motherboardserialnumber(GreetSetMotherBoardSN());
-  #else
-    info->set_motherboardserialnumber(main_board.serialNumber());
-  #endif
-  const auto cpus = hwinfo::getAllCPUs();
-  if (cpus.size() > 0)
-  {
-    hwinfo::CPU cpu = cpus.at(0);
-    info->set_cpu(cpu.modelName());
-  }
-  else
-  {
-    info->set_cpu("");
-  }
-  hwinfo::OS os;
-  info->set_os(os.name());
-  info->set_is32bit(os.is32bit());
-  info->set_islittleendian(os.isLittleEndian());
-  const auto gpus = hwinfo::getAllGPUs();
-  if (gpus.size() > 0)
-  {
-    hwinfo::GPU gpu = gpus.at(0);
-    info->set_gpu(gpu.name());
-  }
-  hwinfo::Memory memory;
-  info->set_rammib(hwinfo::unit::bytes_to_MiB(memory.total_Bytes()));
+
 }
 
 void CloudAdapter::Greet()
