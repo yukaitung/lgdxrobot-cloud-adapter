@@ -58,6 +58,7 @@ class CloudAdapter : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr autoTaskPublisherTimer;
     rclcpp::TimerBase::SharedPtr cloudExchangeTimer;
     rclcpp::TimerBase::SharedPtr softwareEmergencyStopPublisherTimer;
+    rclcpp::TimerBase::SharedPtr systemMonitoringTimer;
     rclcpp::Publisher<lgdxrobot_cloud_msgs::msg::AutoTask>::SharedPtr autoTaskPublisher;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr softwareEmergencyStopPublisher;
     rclcpp::Service<lgdxrobot_cloud_msgs::srv::AutoTaskNext>::SharedPtr autoTaskNextService;
@@ -74,6 +75,7 @@ class CloudAdapter : public rclcpp::Node
     bool pauseTaskAssignment = false;
     lgdxrobot_cloud_msgs::msg::RobotData robotData;
     std::shared_ptr<RobotClientsAutoTaskNavProgress> navProgress;
+    RobotClientsSystemMonitoringInfo systemMonitoringInfo;
     std::vector<double> batteries = {0.0, 0.0};
     RobotClientsRobotCriticalStatus criticalStatus;
     // Robot Data: SLAM
@@ -111,6 +113,7 @@ class CloudAdapter : public rclcpp::Node
     void Greet();
     void WaitForNav2();
 
+    void UpdateSystemMonitoringInfo();
     void ExchangeProcessData();
     void CloudExchange();
     void SlamExchange();

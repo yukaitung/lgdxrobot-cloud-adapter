@@ -95,6 +95,8 @@ void CloudAdapter::Initalise()
     cloudExchangeTimer = this->create_wall_timer(std::chrono::milliseconds(500), 
       std::bind(&CloudAdapter::CloudExchange, this));
     cloudExchangeTimer->cancel();
+    systemMonitoringTimer = this->create_wall_timer(std::chrono::seconds(1), 
+      std::bind(&CloudAdapter::UpdateSystemMonitoringInfo, this));
 
     // Subscribers
     robotDataSubscription = this->create_subscription<lgdxrobot_cloud_msgs::msg::RobotData>("cloud/robot_data", 
@@ -369,6 +371,20 @@ void CloudAdapter::WaitForNav2()
   }
 }
 
+void CloudAdapter::UpdateSystemMonitoringInfo()
+{
+  systemMonitoringInfo.set_cpuusage(systemInfo->GetCpuUsage());
+  auto [memoryTotal, memoryUsed] = systemInfo->GetMemoryUsage();
+  systemMonitoringInfo.set_memorytotal(memoryTotal);
+  systemMonitoringInfo.set_memoryused(memoryUsed);
+  auto [swapTotal, swapUsed] = systemInfo->GetSwapUsage();
+  systemMonitoringInfo.set_swaptotal(swapTotal);
+  systemMonitoringInfo.set_swapused(swapUsed);
+  auto [diskTotal, diskUsed] = systemInfo->GetDiskUsage();
+  systemMonitoringInfo.set_disktotal(diskTotal);
+  systemMonitoringInfo.set_diskused(diskUsed);
+}
+
 void CloudAdapter::ExchangeProcessData()
 {
   if (isSlam)
@@ -393,6 +409,7 @@ void CloudAdapter::ExchangeProcessData()
   exchangeRobotData.mutable_position()->set_rotation(rotation);
   exchangeRobotData.mutable_navprogress()->CopyFrom(*navProgress);
   exchangeRobotData.set_pausetaskassignment(pauseTaskAssignment);
+  exchangeRobotData.mutable_systemmonitoringinfo()->CopyFrom(systemMonitoringInfo);
 }
 
 void CloudAdapter::CloudExchange()
