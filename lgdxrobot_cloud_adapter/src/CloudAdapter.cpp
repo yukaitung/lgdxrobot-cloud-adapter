@@ -246,13 +246,19 @@ void CloudAdapter::GreetSetSystemInfo(RobotClientsSystemInfo *info)
 {
   std::unordered_map<std::string, std::string> cpuInfo = systemInfo->GetCpu();
   std::string cpu;
-  if (!cpuInfo["Vendor ID"].empty() && !cpuInfo["Model name"].empty())
+  std::string cpuVendor = cpuInfo["Vendor ID"];
+  std::string cpuModel = cpuInfo["Model name"];
+  if (cpuModel.compare("-") == 0)
   {
-    cpu = cpuInfo["Vendor ID"] + " - " + cpuInfo["Model name"];
+    cpuModel.clear();
+  }
+  if (!cpuVendor.empty() && !cpuModel.empty())
+  {
+    cpu = cpuVendor + " - " + cpuModel;
   }
   else
   {
-    cpu = cpuInfo["Vendor ID"] + cpuInfo["Model name"];
+    cpu = cpuVendor + cpuModel;
   }
   info->set_cpu(cpu);
   info->set_cpucores(stoi(cpuInfo["CPU(s)"]));
