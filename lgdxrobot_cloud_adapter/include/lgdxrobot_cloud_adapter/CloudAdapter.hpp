@@ -12,7 +12,6 @@
 #include "lgdxrobot_cloud_msgs/msg/robot_data.hpp"
 #include "lgdxrobot_cloud_msgs/srv/auto_task_abort.hpp"
 #include "lgdxrobot_cloud_msgs/srv/auto_task_next.hpp"
-#include "lgdxrobot_cloud_msgs/srv/mcu_sn.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "proto/RobotClientsService.grpc.pb.h"
 #include "rclcpp/rclcpp.hpp"
