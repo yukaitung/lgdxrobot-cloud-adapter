@@ -318,20 +318,14 @@ void CloudAdapter::Greet()
         SaveMap::SaveKeepoutMask(mapParameters, response->mapinfo().keepoutmask(), this->get_logger());
         SaveMap::SaveSpeedMask(mapParameters, response->mapinfo().speedmask(), this->get_logger());
 
-        // Start Nav2 after loading maps
-        RCLCPP_INFO(this->get_logger(), "Waiting for Nav2 to be ready.");
-        while (!nav2DelayClient->wait_for_service(1s)) {
-          if (!rclcpp::ok()) {
-            RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-            delete context;
-            delete request;
-            delete response;
-            return;
-          }
+        if (!StartAndWaitForNav2())
+        {
+          RCLCPP_ERROR(this->get_logger(), "The system is interrupted while waiting for Nav2 to be ready.");
+          delete context;
+          delete request;
+          delete response;
+          return;
         }
-        nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
-        WaitForNav2();
-        RCLCPP_INFO(this->get_logger(), "Nav2 is ready.");
 
         RCLCPP_INFO(this->get_logger(), "Connected to the cloud, start data exchange.");
         robotStatus.ConnnectedCloud();
@@ -352,29 +346,45 @@ void CloudAdapter::Greet()
   });
 }
 
-void CloudAdapter::WaitForNav2()
+bool CloudAdapter::StartAndWaitForNav2()
 {
+  // Start Nav2 from Nav2Delay.cpp
+  RCLCPP_INFO(this->get_logger(), "The map is loaded from the cloud, waiting for Nav2 to be ready.");
+  while (!nav2DelayClient->wait_for_service(1s)) 
+  {
+    if (!rclcpp::ok()) 
+    {
+      return false;
+    }
+  }
+  nav2DelayClient->async_send_request(std::make_shared<std_srvs::srv::Empty::Request>());
+
+  // Check Nav2 is ready
   auto client = this->create_client<lifecycle_msgs::srv::GetState>("bt_navigator/get_state");
-  while (!client->wait_for_service(1s)) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-      return;
+  while (!client->wait_for_service(1s)) 
+  {
+    if (!rclcpp::ok()) 
+    {
+      return false;
     }
   }
   bool isReady = false;
   while (!isReady)
   {
     auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
-    client->async_send_request(request, [this, &isReady](rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedFuture future)
-    {
-      auto result = future.get();
-      if (result->current_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    client->async_send_request(request, 
+      [this, &isReady](rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedFuture future)
       {
-        isReady = true;
-      }
-    });
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+        auto result = future.get();
+        if (result->current_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
+          isReady = true;
+        }
+      });
+    std::this_thread::sleep_for(1s);
   }
+  RCLCPP_INFO(this->get_logger(), "Nav2 is ready.");
+  return true;
 }
 
 void CloudAdapter::UpdateSystemMonitoringInfo()
